@@ -1,0 +1,5 @@
+INSERT OR IGNORE INTO community_channels VALUES ('chan-nba', 'NBA Fan Hub', 'General discussions about the NBA, drafts, and matchups', 'basketball', 1420);
+INSERT OR IGNORE INTO community_channels VALUES ('chan-ucl', 'Champions League Banter', 'Weekly UCL matches, transfers, and tactical debates', 'soccer', 1850);
+INSERT OR IGNORE INTO community_channels VALUES ('chan-nfl', 'NFL Redzone Chat', 'Sunday matchups, fantasy football, and touchdowns', 'football', 920);
+INSERT OR IGNORE INTO community_messages VALUES ('msg-1', 'chan-nba', 'SlamDunk99', 'Tatum is definitely the MVP frontrunner this season! His stepback in Q4 was insane.', datetime('now'));
+INSERT OR IGNORE INTO community_messages VALUES ('msg-2', 'chan-nba', 'CurryChef', 'Celtics got lucky. Steph was fouled on that three-pointer attempt with 30s left, but no call!', datetime('now'));

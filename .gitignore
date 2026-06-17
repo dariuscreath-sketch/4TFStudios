@@ -1,0 +1,14 @@
+node_modules/
+.vite-temp/
+dist/
+.env
+.env.local
+*.log
+.DS_Store
+__pycache__/
+*.pyc
+*.egg-info/
+.agents/
+.team/
+.cto/
+.local/
