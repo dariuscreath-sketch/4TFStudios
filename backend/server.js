@@ -23,9 +23,9 @@ app.get('/api/scores', async (req) => {
     at.name as away_team_name, at.logo as away_team_logo,
     l.name as league_name
     FROM games g 
-    JOIN teams ht ON g.home_team_id = ht.id 
-    JOIN teams at ON g.away_team_id = at.id 
-    JOIN leagues l ON g.league_id = l.id
+    LEFT JOIN teams ht ON g.home_team_id = ht.id 
+    LEFT JOIN teams at ON g.away_team_id = at.id 
+    LEFT JOIN leagues l ON g.league_id = l.id
     WHERE 1=1`;
   if (sport && sport !== 'all') sql += ` AND g.sport = '${sport}'`;
   if (status) sql += ` AND g.status = '${status}'`;
@@ -35,7 +35,7 @@ app.get('/api/scores', async (req) => {
   return rows.map(r => ({
     id: r.id,
     sport: r.sport,
-    league: r.league_name,
+    league: r.league_name || r.league_id,
     status: r.status,
     time: r.period || r.start_time || '',
     homeTeam: { id: r.home_team_id, name: r.home_team_name, logo: r.home_team_logo, score: r.home_score },
@@ -53,16 +53,16 @@ app.get('/api/scores/:id', async (req) => {
     at.name as away_team_name, at.logo as away_team_logo,
     l.name as league_name
     FROM games g 
-    JOIN teams ht ON g.home_team_id = ht.id 
-    JOIN teams at ON g.away_team_id = at.id 
-    JOIN leagues l ON g.league_id = l.id
+    LEFT JOIN teams ht ON g.home_team_id = ht.id 
+    LEFT JOIN teams at ON g.away_team_id = at.id 
+    LEFT JOIN leagues l ON g.league_id = l.id
     WHERE g.id = '${req.params.id}'`);
   if (!rows.length) return { error: 'Game not found' };
   const r = rows[0];
   return {
     id: r.id,
     sport: r.sport,
-    league: r.league_name,
+    league: r.league_name || r.league_id,
     status: r.status,
     time: r.period || r.start_time || '',
     homeTeam: { id: r.home_team_id, name: r.home_team_name, logo: r.home_team_logo, score: r.home_score },
@@ -78,9 +78,9 @@ app.get('/api/scores/:id/summary', async (req) => {
   const rows = db(`SELECT gs.*, g.home_score, g.away_score,
     ht.name as home_team_name, at.name as away_team_name
     FROM game_summaries gs 
-    JOIN games g ON gs.game_id = g.id
-    JOIN teams ht ON g.home_team_id = ht.id
-    JOIN teams at ON g.away_team_id = at.id
+    LEFT JOIN games g ON gs.game_id = g.id
+    LEFT JOIN teams ht ON g.home_team_id = ht.id
+    LEFT JOIN teams at ON g.away_team_id = at.id
     WHERE gs.game_id = '${req.params.id}'`);
   if (!rows.length) {
     return { gameId: req.params.id, summary: 'AI summary not yet generated for this game.' };
