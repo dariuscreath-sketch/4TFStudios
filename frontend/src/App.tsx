@@ -16,7 +16,7 @@ import { ChatMessage } from './components/ChatMessage';
 import { PollWidget } from './components/PollWidget';
 
 // Mock data & types
-import type { Match, NewsArticle, Poll } from './mockData';
+import type { Match, NewsArticle, Poll, CommunityChannel } from './mockData';
 import type { ChatMessage as ChatMessageType } from './mockData';
 import { 
   initialMatches, initialNews, initialChannels, 
@@ -31,6 +31,7 @@ function App() {
   // Custom mock interactive states
   const [matches, setMatches] = useState<Match[]>(initialMatches);
   const [news, setNews] = useState<NewsArticle[]>(initialNews);
+  const [channels, setChannels] = useState<CommunityChannel[]>(initialChannels);
   const [messages, setMessages] = useState<ChatMessageType[]>(initialMessages);
   const [polls, setPolls] = useState<Poll[]>(initialPolls);
   
@@ -58,6 +59,195 @@ function App() {
   const [activeChannelId, setActiveChannelId] = useState<string>('chan-nba');
   const [chatInput, setChatInput] = useState<string>('');
   const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  // API Integration Functions
+  const fetchScores = async (sportFilter: string) => {
+    try {
+      const url = sportFilter === 'all' ? '/api/scores' : `/api/scores?sport=${sportFilter}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setMatches(data);
+      }
+    } catch (err) {
+      console.error('Error fetching scores:', err);
+    }
+  };
+
+  const fetchNews = async (sportFilter: string) => {
+    try {
+      const url = sportFilter === 'all' ? '/api/news' : `/api/news?sport=${sportFilter}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setNews(data);
+      }
+    } catch (err) {
+      console.error('Error fetching news:', err);
+    }
+  };
+
+  const fetchChannels = async () => {
+    try {
+      const res = await fetch('/api/community/channels');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          setChannels(data);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching channels:', err);
+    }
+  };
+
+  const fetchMessages = async (channelId: string) => {
+    try {
+      const res = await fetch(`/api/community/channels/${channelId}/messages`);
+      if (res.ok) {
+        const data = await res.json();
+        const mapped = data.map((m: any) => ({
+          id: m.id,
+          channelId: m.channelId,
+          user: {
+            name: m.user?.name || m.user_name || 'User',
+            isPremium: m.user?.isPremium || false,
+            avatar: m.user?.isPremium ? '👑' : '😎'
+          },
+          text: m.text,
+          timestamp: m.timestamp ? new Date(m.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }) : new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false })
+        }));
+        setMessages(mapped);
+      }
+    } catch (err) {
+      console.error('Error fetching messages:', err);
+    }
+  };
+
+  const sendMessageToApi = async (channelId: string, text: string) => {
+    try {
+      const res = await fetch(`/api/community/channels/${channelId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      if (res.ok) {
+        await fetchMessages(channelId);
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
+    }
+  };
+
+  const fetchUserProfile = async () => {
+    try {
+      const res = await fetch('/api/user/profile');
+      if (res.ok) {
+        const data = await res.json();
+        setIsPremium(data.isPremium);
+        if (data.favorites?.sports) {
+          setFavoritesSports(data.favorites.sports);
+        }
+        setNotificationsEnabled(data.notificationsEnabled);
+      }
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+    }
+  };
+
+  const handleSubscribe = async () => {
+    try {
+      const res = await fetch('/api/user/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: 'premium_monthly' })
+      });
+      if (res.ok) {
+        triggerPremiumUpgrade();
+      }
+    } catch (err) {
+      console.error('Error subscribing:', err);
+      triggerPremiumUpgrade();
+    }
+  };
+
+  const handleSelectMatch = async (match: Match) => {
+    setSelectedMatch(match);
+    
+    // Fetch summary
+    try {
+      const summaryRes = await fetch(`/api/scores/${match.id}/summary`);
+      if (summaryRes.ok) {
+        const summaryData = await summaryRes.json();
+        if (summaryData.summary && summaryData.summary !== 'AI summary not yet generated for this game.') {
+          setSelectedMatch(prev => prev && prev.id === match.id ? {
+            ...prev,
+            hasAiSummary: true,
+            aiSummary: {
+              title: summaryData.title || `AI Game Recap: ${match.homeTeam.name} vs ${match.awayTeam.name}`,
+              summary: summaryData.summary,
+              keyStats: summaryData.keyStats && summaryData.keyStats.length > 0 ? summaryData.keyStats : [
+                { label: 'xG (Expected Goals)', home: '1.45', away: '1.20' },
+                { label: 'Attacking Entries', home: '38', away: '32' }
+              ],
+              aiAnalysis: summaryData.aiAnalysis || 'The AI model suggests solid defensive transitions for both teams.'
+            }
+          } : prev);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching match summary:', err);
+    }
+
+    // Fetch prediction
+    try {
+      const predRes = await fetch(`/api/scores/${match.id}/prediction`);
+      if (predRes.ok) {
+        const predData = await predRes.json();
+        setSelectedMatch(prev => prev && prev.id === match.id ? {
+          ...prev,
+          prediction: {
+            homeWinProbability: predData.homeWinProbability,
+            awayWinProbability: predData.awayWinProbability,
+            predictionText: predData.predictionText,
+            isPremium: predData.isPremium
+          }
+        } : prev);
+      }
+    } catch (err) {
+      console.error('Error fetching match prediction:', err);
+    }
+  };
+
+  // Fetch initial data on mount
+  useEffect(() => {
+    fetchUserProfile();
+    fetchChannels();
+    fetchScores('all');
+    fetchNews('all');
+  }, []);
+
+  // Fetch scores and news on selectedSport change
+  useEffect(() => {
+    fetchScores(selectedSport);
+    fetchNews(selectedSport);
+  }, [selectedSport]);
+
+  // Fetch messages on activeChannelId change
+  useEffect(() => {
+    fetchMessages(activeChannelId);
+  }, [activeChannelId]);
+
+  // Poll scores and messages
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchScores(selectedSport);
+      if (activeTab === 'community') {
+        fetchMessages(activeChannelId);
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [selectedSport, activeChannelId, activeTab]);
 
   // Auto-scroll community chats
   useEffect(() => {
@@ -106,24 +296,33 @@ function App() {
   };
 
   // Submit community message
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
-    const newMsg: ChatMessageType = {
-      id: `msg-${Date.now()}`,
+    const text = chatInput;
+    setChatInput('');
+
+    // Optimistic local update
+    const tempMsg: ChatMessageType = {
+      id: `temp-${Date.now()}`,
       channelId: activeChannelId,
       user: {
         name: 'DemoFan',
         isPremium: isPremium,
         avatar: isPremium ? '👑' : '😎',
       },
-      text: chatInput,
+      text: text,
       timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }),
     };
 
-    setMessages(prev => [...prev, newMsg]);
-    setChatInput('');
+    setMessages(prev => [...prev, tempMsg]);
+
+    try {
+      await sendMessageToApi(activeChannelId, text);
+    } catch (err) {
+      console.error('Error sending message:', err);
+    }
   };
 
   // Simulate AI generated Summary
@@ -337,7 +536,7 @@ function App() {
                   </h3>
                   <GameCard 
                     match={topLiveMatch} 
-                    onClick={() => setSelectedMatch(topLiveMatch)} 
+                    onClick={() => handleSelectMatch(topLiveMatch)} 
                     isPremium={isPremium} 
                   />
                 </div>
@@ -352,7 +551,7 @@ function App() {
                 <div 
                   onClick={() => {
                     const sampleMatch = matches.find(m => m.id === 'game-102') || matches[0];
-                    setSelectedMatch(sampleMatch);
+                    handleSelectMatch(sampleMatch);
                   }}
                   className="bg-neutral-950 border border-neutral-800/80 rounded-xl p-4 cursor-pointer hover:border-neutral-700/60 transition-all shadow-md group relative overflow-hidden"
                 >
@@ -460,7 +659,7 @@ function App() {
                   <GameCard 
                     key={match.id} 
                     match={match} 
-                    onClick={() => setSelectedMatch(match)} 
+                    onClick={() => handleSelectMatch(match)} 
                     isPremium={isPremium} 
                   />
                 ))
@@ -517,7 +716,7 @@ function App() {
                   Fan Hub Group Channels
                 </h3>
                 <div className="flex flex-col gap-1">
-                  {initialChannels.map(channel => (
+                  {channels.map(channel => (
                     <ChannelCard 
                       key={channel.id} 
                       channel={channel} 
@@ -535,10 +734,10 @@ function App() {
                 <div className="bg-neutral-900 border-b border-neutral-800 px-4 py-2.5 flex justify-between items-center">
                   <div className="truncate">
                     <h4 className="font-bold text-xs md:text-sm text-white truncate">
-                      {initialChannels.find(c => c.id === activeChannelId)?.name}
+                      {channels.find(c => c.id === activeChannelId)?.name}
                     </h4>
                     <p className="text-[10px] text-neutral-400 truncate max-w-full">
-                      {initialChannels.find(c => c.id === activeChannelId)?.description}
+                      {channels.find(c => c.id === activeChannelId)?.description}
                     </p>
                   </div>
                 </div>
@@ -556,7 +755,7 @@ function App() {
                       Join our elite lounge of sports analysts. Standard accounts cannot view or post premium betting tips.
                     </p>
                     <button 
-                      onClick={() => triggerPremiumUpgrade()}
+                      onClick={handleSubscribe}
                       className="bg-amber-500 text-black text-xs font-bold px-5 py-2.5 rounded-xl hover:bg-amber-400 transition-all active:scale-95 shadow-md shadow-amber-500/20 inline-flex items-center gap-1.5"
                     >
                       <Crown className="w-4 h-4 fill-black" />
@@ -741,7 +940,7 @@ function App() {
                     Only <span className="text-amber-400 font-extrabold text-base">$4.99</span>/mo
                   </div>
                   <button 
-                    onClick={() => triggerPremiumUpgrade()}
+                    onClick={handleSubscribe}
                     className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-xs font-black py-3 rounded-xl hover:from-amber-400 hover:to-yellow-300 transition-all active:scale-[0.98] shadow-md shadow-amber-500/30"
                   >
                     Upgrade to Gold Account
@@ -934,7 +1133,7 @@ function App() {
                         Premium betting recommendations are reserved exclusively for Gold users. Get instantly unlocked!
                       </p>
                       <button
-                        onClick={() => triggerPremiumUpgrade()}
+                        onClick={handleSubscribe}
                         className="bg-amber-500 text-black font-extrabold text-[11px] px-4 py-2 rounded-xl transition-all hover:bg-amber-400 shadow-md shadow-amber-500/20 inline-flex items-center gap-1"
                       >
                         <Crown className="w-3.5 h-3.5 fill-black" />
