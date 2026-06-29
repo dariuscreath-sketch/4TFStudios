@@ -63,21 +63,27 @@ Format: TITLE|||SUMMARY|||STAT1_LABEL|STAT1_HOME|STAT1_AWAY|||STAT2_LABEL|STAT2_
 }
 
 async function generatePrediction(game) {
-  const prompt = `Generate a pre-game AI prediction for this upcoming match:
+  const prompt = `You are a sports prediction AI. For this upcoming match:
 ${game.home_team} vs ${game.away_team}
 Sport: ${game.sport}
 League: ${game.league}
 Venue: ${game.venue}
 
-Provide: win probability for each team (as percentages adding to 100), and a 1-2 sentence prediction analysis.
-Format: HOME_PCT|||AWAY_PCT|||PREDICTION_TEXT`;
+Output ONLY a JSON object with these exact fields:
+{
+  "homeWinProbability": <number 0-100>,
+  "awayWinProbability": <number 0-100>,
+  "predictionText": "<1-2 sentence analysis>"
+}
+
+The percentages must add up to 100. Do not include any other text.`;
 
   const raw = await callOpenAI(prompt);
-  const parts = raw.split('|||');
+  const json = JSON.parse(raw);
   return {
-    homeWinProb: parseFloat(parts[0]) || 50,
-    awayWinProb: parseFloat(parts[1]) || 50,
-    text: parts[2] || 'Prediction analysis unavailable.',
+    homeWinProb: json.homeWinProbability,
+    awayWinProb: json.awayWinProbability,
+    text: json.predictionText,
   };
 }
 
