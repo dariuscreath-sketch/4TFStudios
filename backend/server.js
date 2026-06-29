@@ -191,6 +191,41 @@ app.post('/api/user/subscribe', async (req) => {
 // Health check
 app.get('/api/health', async () => ({ status: 'ok', version: '1.0.0' }));
 
+// Serve static frontend in production
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const distPath = join(__dirname, '..', 'frontend', 'dist');
+
+try {
+  const indexHtml = readFileSync(join(distPath, 'index.html'), 'utf8');
+  
+  // Serve static assets
+  app.get('/*', async (req, reply) => {
+    // Let API routes handle themselves
+    if (req.url.startsWith('/api/')) return;
+    
+    const filePath = join(distPath, req.url === '/' ? 'index.html' : req.url);
+    try {
+      const content = readFileSync(filePath);
+      const ext = filePath.split('.').pop();
+      const mime = {
+        'html': 'text/html', 'js': 'application/javascript', 'css': 'text/css',
+        'png': 'image/png', 'svg': 'image/svg+xml', 'json': 'application/json',
+        'ico': 'image/x-icon', 'webmanifest': 'application/manifest+json'
+      };
+      reply.type(mime[ext] || 'text/plain').send(content);
+    } catch {
+      reply.type('text/html').send(indexHtml);
+    }
+  });
+  console.log('Serving frontend static files');
+} catch (e) {
+  console.log('Frontend dist not found, API-only mode:', e.message);
+}
+
 const port = parseInt(process.env.PORT || '3002');
 await app.listen({ port, host: '0.0.0.0' });
-console.log(`ScoreVerse API running on port ${port}`);
+console.log(`ScoreVerse running on port ${port}`);

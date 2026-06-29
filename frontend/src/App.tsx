@@ -15,7 +15,7 @@ import { ChannelCard } from './components/ChannelCard';
 import { ChatMessage } from './components/ChatMessage';
 import { PollWidget } from './components/PollWidget';
 import { AdBanner } from './components/AdBanner';
-import { WatchLive } from './components/WatchLive';
+import { GameCenter } from './components/GameCenter';
 
 // Mock data & types
 import type { Match, NewsArticle, Poll, CommunityChannel } from './mockData';
@@ -425,7 +425,7 @@ function App() {
         <header className="sticky top-0 z-40 bg-neutral-950/95 backdrop-blur-md border-b border-neutral-900 px-4 py-3.5 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400 bg-clip-text text-transparent tracking-tight">
-              ScoreVerse AI
+              ScoreVerse
             </span>
             {isPremium && <PremiumBadge size="sm" />}
           </div>
@@ -1050,13 +1050,18 @@ function App() {
                 </div>
               </div>
 
-              {/* Watch Live Streaming */}
-              <WatchLive
+              {/* Live Game Center */}
+              <GameCenter
                 sport={selectedMatch.sport}
                 league={selectedMatch.league}
                 homeTeam={selectedMatch.homeTeam.name}
                 awayTeam={selectedMatch.awayTeam.name}
-                isLive={selectedMatch.status === 'live'}
+                homeScore={selectedMatch.homeTeam.score ?? null}
+                awayScore={selectedMatch.awayTeam.score ?? null}
+                status={selectedMatch.status}
+                homeWinProb={selectedMatch.prediction?.homeWinProbability}
+                awayWinProb={selectedMatch.prediction?.awayWinProbability}
+                isPremium={isPremium}
               />
 
               {/* AI Win Probability Dial */}
