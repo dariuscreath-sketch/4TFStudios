@@ -21,11 +21,15 @@ app.get('/api/scores', async (req) => {
   let sql = `SELECT g.*, 
     ht.name as home_team_name, ht.logo as home_team_logo,
     at.name as away_team_name, at.logo as away_team_logo,
-    l.name as league_name
+    l.name as league_name,
+    CASE WHEN gs.game_id IS NOT NULL THEN 1 ELSE 0 END as has_summary,
+    CASE WHEN p.game_id IS NOT NULL THEN 1 ELSE 0 END as has_pred
     FROM games g 
     LEFT JOIN teams ht ON g.home_team_id = ht.id 
     LEFT JOIN teams at ON g.away_team_id = at.id 
     LEFT JOIN leagues l ON g.league_id = l.id
+    LEFT JOIN game_summaries gs ON g.id = gs.game_id
+    LEFT JOIN predictions p ON g.id = p.game_id
     WHERE 1=1`;
   if (sport && sport !== 'all') sql += ` AND g.sport = '${sport}'`;
   if (status) sql += ` AND g.status = '${status}'`;
@@ -41,8 +45,8 @@ app.get('/api/scores', async (req) => {
     homeTeam: { id: r.home_team_id, name: r.home_team_name, logo: r.home_team_logo, score: r.home_score },
     awayTeam: { id: r.away_team_id, name: r.away_team_name, logo: r.away_team_logo, score: r.away_score },
     venue: r.venue,
-    hasAiSummary: false,
-    hasPrediction: false
+    hasAiSummary: !!r.has_summary,
+    hasPrediction: !!r.has_pred
   }));
 });
 

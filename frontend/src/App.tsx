@@ -14,6 +14,8 @@ import { SportFilter } from './components/SportFilter';
 import { ChannelCard } from './components/ChannelCard';
 import { ChatMessage } from './components/ChatMessage';
 import { PollWidget } from './components/PollWidget';
+import { AdBanner } from './components/AdBanner';
+import { WatchLive } from './components/WatchLive';
 
 // Mock data & types
 import type { Match, NewsArticle, Poll, CommunityChannel } from './mockData';
@@ -614,6 +616,9 @@ function App() {
                 </div>
               </div>
 
+              {/* Ad Banner */}
+              {!isPremium && <AdBanner size="medium" />}
+
               {/* Curated Sports News */}
               <div>
                 <div className="flex justify-between items-center mb-2.5 px-1">
@@ -655,13 +660,19 @@ function App() {
               </div>
 
               {filteredMatches.length > 0 ? (
-                filteredMatches.map(match => (
-                  <GameCard 
-                    key={match.id} 
-                    match={match} 
-                    onClick={() => handleSelectMatch(match)} 
-                    isPremium={isPremium} 
-                  />
+                filteredMatches.map((match, idx) => (
+                  <React.Fragment key={match.id}>
+                    <GameCard 
+                      match={match} 
+                      onClick={() => handleSelectMatch(match)} 
+                      isPremium={isPremium} 
+                    />
+                    {idx > 0 && idx % 3 === 0 && (
+                      <div className="my-1">
+                        <AdBanner size="small" sport={match.sport} />
+                      </div>
+                    )}
+                  </React.Fragment>
                 ))
               ) : (
                 <div className="text-center py-16 text-neutral-500">
@@ -688,13 +699,17 @@ function App() {
               </div>
 
               {filteredNews.length > 0 ? (
-                filteredNews.map(article => (
-                  <NewsCard 
-                    key={article.id} 
-                    article={article} 
-                    onClick={() => setSelectedArticle(article)} 
-                    isPremium={isPremium} 
-                  />
+                filteredNews.map((article, idx) => (
+                  <React.Fragment key={article.id}>
+                    <NewsCard 
+                      article={article} 
+                      onClick={() => setSelectedArticle(article)} 
+                      isPremium={isPremium} 
+                    />
+                    {idx > 0 && idx % 2 === 0 && !isPremium && (
+                      <AdBanner size="small" sport={article.sport} />
+                    )}
+                  </React.Fragment>
                 ))
               ) : (
                 <div className="text-center py-16 text-neutral-500">
@@ -1035,6 +1050,15 @@ function App() {
                 </div>
               </div>
 
+              {/* Watch Live Streaming */}
+              <WatchLive
+                sport={selectedMatch.sport}
+                league={selectedMatch.league}
+                homeTeam={selectedMatch.homeTeam.name}
+                awayTeam={selectedMatch.awayTeam.name}
+                isLive={selectedMatch.status === 'live'}
+              />
+
               {/* AI Win Probability Dial */}
               {selectedMatch.prediction && (
                 <div className="bg-slate-900/60 border border-neutral-800 p-4 rounded-2xl shadow-md">
@@ -1114,6 +1138,9 @@ function App() {
                   </div>
                 )}
               </div>
+
+              {/* Ad in match modal */}
+              {!isPremium && <AdBanner size="small" />}
 
               {/* Win Projection / Expert Betting predictions (Locked or unlocked) */}
               {selectedMatch.prediction && (
