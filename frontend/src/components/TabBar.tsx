@@ -17,34 +17,31 @@ export const TabBar: React.FC<TabBarProps> = ({ activeTab, setActiveTab, isPremi
   ] as const;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-neutral-950 border-t border-neutral-800 shadow-xl max-w-md mx-auto">
-      <div className="flex justify-around items-center h-16 px-2">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all duration-200 ${
-                isActive 
-                  ? isPremium 
-                    ? 'text-amber-500 scale-105' 
-                    : 'text-emerald-500 scale-105' 
-                  : 'text-neutral-500 hover:text-neutral-300'
-              }`}
-            >
-              <Icon className="w-5 h-5 mb-1" />
-              <span className="text-[10px] font-semibold tracking-wider">{tab.label}</span>
-              {isActive && (
-                <span className={`w-1 h-1 rounded-full mt-0.5 ${
-                  isPremium ? 'bg-amber-500' : 'bg-emerald-500'
-                }`} />
-              )}
-            </button>
-          );
-        })}
+    <div className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto px-2 pb-2">
+      <div className="glass-strong rounded-2xl shadow-2xl">
+        <div className="flex justify-around items-center h-14 px-1">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex flex-col items-center justify-center flex-1 py-1.5 rounded-xl transition-all duration-200 ${
+                  isActive 
+                    ? isPremium 
+                      ? 'text-amber-500 scale-105 bg-amber-500/5' 
+                      : 'text-emerald-500 scale-105 bg-emerald-500/5' 
+                    : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/5'
+                }`}
+              >
+                <Icon className={`w-5 h-5 mb-0.5 ${isActive ? 'drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]' : ''}`} />
+                <span className={`text-[10px] font-semibold tracking-wider ${isActive ? 'font-bold' : ''}`}>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

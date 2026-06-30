@@ -15,16 +15,16 @@ export const GameCard: React.FC<GameCardProps> = ({ match, onClick, isPremium })
   return (
     <div
       onClick={onClick}
-      className="bg-slate-900/60 hover:bg-slate-900 border border-neutral-800 hover:border-neutral-700/60 rounded-xl p-4 mb-3 transition-all duration-200 cursor-pointer shadow-lg active:scale-[0.99]"
+      className="sport-card bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/10 hover:border-emerald-500/20 rounded-xl p-4 mb-2.5 cursor-pointer shadow-lg active:scale-[0.99] group"
     >
       <div className="flex justify-between items-center mb-2.5">
-        <span className="text-xs font-semibold text-neutral-400 bg-neutral-800/80 px-2 py-0.5 rounded-md uppercase tracking-wider">
+        <span className="text-[10px] font-bold text-neutral-400 bg-white/5 px-2 py-0.5 rounded-md uppercase tracking-wider border border-white/5">
           {match.league}
         </span>
         <div className="flex items-center gap-1.5">
           {isLive && (
-            <span className="flex items-center gap-1 bg-red-950/80 border border-red-500/30 text-red-400 text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase animate-pulse">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>
+            <span className="flex items-center gap-1 bg-red-950/60 border border-red-500/20 text-red-400 text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase pulse-ring">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block animate-pulse"></span>
               Live
             </span>
           )}

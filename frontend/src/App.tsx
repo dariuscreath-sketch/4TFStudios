@@ -417,14 +417,14 @@ function App() {
   const highlightedNews = news[0];
 
   return (
-    <div className="bg-neutral-900 min-h-screen text-gray-100 flex justify-center selection:bg-emerald-500 selection:text-black">
+    <div className="min-h-screen text-gray-100 flex justify-center selection:bg-emerald-500 selection:text-black bg-[#0a0a0f]">
       {/* Mobile-first frame simulating an app on desktop */}
-      <div className="w-full max-w-md bg-black min-h-screen shadow-2xl flex flex-col border-x border-neutral-800 relative pb-20 overflow-hidden">
+      <div className="w-full max-w-md min-h-screen flex flex-col relative pb-20 overflow-hidden">
         
-        {/* Top Header */}
-        <header className="sticky top-0 z-40 bg-neutral-950/95 backdrop-blur-md border-b border-neutral-900 px-4 py-3.5 flex justify-between items-center shrink-0">
+        {/* Top Header - Glass */}
+        <header className="sticky top-0 z-40 glass-strong border-b border-white/5 px-4 py-3.5 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-black bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400 bg-clip-text text-transparent tracking-tight">
+            <span className="text-xl font-black gradient-text tracking-tight">
               ScoreVerse
             </span>
             {isPremium && <PremiumBadge size="sm" />}
@@ -434,9 +434,9 @@ function App() {
             {!isPremium ? (
               <button 
                 onClick={() => setActiveTab('profile')} 
-                className="flex items-center gap-1 text-[11px] font-bold text-amber-400 hover:text-amber-300 border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 rounded-full uppercase transition-all duration-200"
+                className="flex items-center gap-1 text-[11px] font-bold text-amber-400 hover:text-amber-300 border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 rounded-full uppercase transition-all duration-200 glow-gold"
               >
-                <Crown className="w-3.5 h-3.5 fill-amber-500 animate-pulse" />
+                <Crown className="w-3.5 h-3.5 fill-amber-500" />
                 Go Gold
               </button>
             ) : (
@@ -448,10 +448,10 @@ function App() {
               </button>
             )}
 
-            <button className="relative w-8 h-8 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-neutral-200">
+            <button className="relative w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-neutral-400 hover:text-neutral-200 transition-colors">
               <Bell className="w-4 h-4" />
               {notificationsEnabled && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-neutral-950 animate-ping" />
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-[#0a0a0f] animate-ping" />
               )}
             </button>
           </div>
@@ -484,16 +484,19 @@ function App() {
           {/* ==================== HOME TAB ==================== */}
           {activeTab === 'home' && (
             <div className="flex flex-col gap-4 animate-fade-in">
-              {/* Hero Spotlight */}
-              <div className="bg-gradient-to-br from-neutral-900 to-slate-950 border border-neutral-800/80 rounded-2xl p-5 relative overflow-hidden shadow-xl">
+              {/* Hero Spotlight - Vibrant */}
+              <div className="gradient-border overflow-hidden">
+                <div className="bg-gradient-to-br from-emerald-950/40 via-slate-950 to-blue-950/40 rounded-2xl p-5 relative shadow-xl">
                 {/* Visual elements */}
-                <div className="absolute right-0 bottom-0 opacity-10 select-none pointer-events-none text-9xl">📈</div>
+                <div className="absolute -right-4 -bottom-4 opacity-[0.04] select-none pointer-events-none text-9xl scale-150">📊</div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/5 rounded-full blur-3xl" />
                 <div className="relative z-10">
                   <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full inline-block mb-2">
                     Predictive Hub
                   </span>
                   <h2 className="text-xl font-black text-white leading-tight mb-1.5">
-                    Your Complete Sports AI Assistant.
+                    Your Complete Sports<br />AI Assistant.
                   </h2>
                   <p className="text-xs text-neutral-400 leading-relaxed max-w-[90%] mb-4">
                     Replacing manual search, analysis, and betting confusion with real-time AI summaries and locks.
@@ -502,14 +505,15 @@ function App() {
                     onClick={() => setActiveTab('scores')}
                     className={`inline-flex items-center gap-1 text-xs font-bold px-4 py-2 rounded-xl text-black transition-all active:scale-95 ${
                       isPremium 
-                        ? 'bg-amber-500 shadow-md shadow-amber-500/20' 
-                        : 'bg-emerald-500 shadow-md shadow-emerald-500/20'
+                        ? 'bg-gradient-to-r from-amber-500 to-yellow-400 shadow-lg shadow-amber-500/20 glow-gold' 
+                        : 'bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-lg shadow-emerald-500/20 glow-green'
                     }`}
                   >
                     Explore Predictions
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
+              </div>
               </div>
 
               {/* Personalized Feed Banner */}
@@ -996,9 +1000,9 @@ function App() {
 
         {/* ==================== MATCH DETAILS MODAL ==================== */}
         {selectedMatch && (
-          <div className="absolute inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col animate-slide-up">
-            {/* Modal Header */}
-            <div className="bg-neutral-950 px-4 py-3 flex justify-between items-center border-b border-neutral-900">
+          <div className="absolute inset-0 z-50 bg-[#0a0a0f]/95 backdrop-blur-xl flex flex-col animate-fade-in">
+            {/* Modal Header - Glass */}
+            <div className="glass-strong px-4 py-3 flex justify-between items-center border-b border-white/5">
               <span className="text-xs font-bold text-neutral-400 uppercase tracking-wide">
                 {selectedMatch.league} Matchup
               </span>
@@ -1007,7 +1011,7 @@ function App() {
                   setSelectedMatch(null);
                   setAiGeneratedResult(false);
                 }} 
-                className="w-8 h-8 rounded-full bg-neutral-900 flex items-center justify-center text-neutral-400 hover:text-white"
+                className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/10 transition-all"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1016,35 +1020,37 @@ function App() {
             {/* Modal Scrollable Feed */}
             <div className="flex-grow overflow-y-auto p-4 flex flex-col gap-4 no-scrollbar">
               
-              {/* Core Scorecard */}
-              <div className="bg-slate-900/60 border border-neutral-800 p-5 rounded-2xl shadow-md text-center">
+              {/* Core Scorecard - Glass */}
+              <div className="glass rounded-2xl p-5 text-center gradient-border">
                 <div className="text-[10px] text-neutral-500 font-semibold mb-3">{selectedMatch.venue}</div>
                 <div className="grid grid-cols-3 items-center">
                   {/* Home */}
                   <div className="flex flex-col items-center gap-1">
-                    <span className="text-4xl">{selectedMatch.homeTeam.logo}</span>
+                    <span className="text-4xl drop-shadow-xl">{selectedMatch.homeTeam.logo}</span>
                     <span className="font-bold text-xs text-neutral-200 mt-1">{selectedMatch.homeTeam.name}</span>
                   </div>
                   {/* Score or vs */}
                   <div className="flex flex-col items-center gap-1.5">
                     {selectedMatch.status === 'scheduled' ? (
-                      <span className="text-xs font-bold text-emerald-400 bg-emerald-950/20 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                      <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
                         {selectedMatch.time}
                       </span>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <span className="font-black text-2xl text-white">{selectedMatch.homeTeam.score}</span>
+                        <span className={`font-black text-2xl ${selectedMatch.status === 'live' ? 'score-live text-emerald-400' : 'text-white'}`}>{selectedMatch.homeTeam.score}</span>
                         <span className="text-neutral-500 font-bold">-</span>
-                        <span className="font-black text-2xl text-white">{selectedMatch.awayTeam.score}</span>
+                        <span className={`font-black text-2xl ${selectedMatch.status === 'live' ? 'score-live text-emerald-400' : 'text-white'}`}>{selectedMatch.awayTeam.score}</span>
                       </div>
                     )}
-                    <span className="text-[9px] uppercase font-bold text-neutral-400 tracking-wider">
-                      {selectedMatch.status === 'live' ? 'Live' : selectedMatch.status}
+                    <span className={`text-[9px] uppercase font-bold tracking-wider ${
+                      selectedMatch.status === 'live' ? 'text-emerald-400' : 'text-neutral-500'
+                    }`}>
+                      {selectedMatch.status === 'live' ? '● Live' : selectedMatch.status}
                     </span>
                   </div>
                   {/* Away */}
                   <div className="flex flex-col items-center gap-1">
-                    <span className="text-4xl">{selectedMatch.awayTeam.logo}</span>
+                    <span className="text-4xl drop-shadow-xl">{selectedMatch.awayTeam.logo}</span>
                     <span className="font-bold text-xs text-neutral-200 mt-1">{selectedMatch.awayTeam.name}</span>
                   </div>
                 </div>
