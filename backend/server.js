@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { execSync } from 'child_process';
+import { fetchStandings, fetchNews, fetchVideos, fetchAllStandings, EXTRA_SPORTS } from './espn-service.js';
 
 const app = Fastify({ logger: true });
 await app.register(cors, { origin: true });
@@ -115,26 +116,7 @@ app.get('/api/scores/:id/prediction', async (req) => {
   };
 });
 
-// GET /api/news
-app.get('/api/news', async (req) => {
-  const { sport } = req.query;
-  let sql = 'SELECT * FROM news_articles';
-  if (sport && sport !== 'all') sql += ` WHERE sport = '${sport}'`;
-  sql += ' ORDER BY published_at DESC';
-  const rows = db(sql);
-  return rows.map(r => ({
-    id: r.id,
-    title: r.title,
-    summary: r.summary,
-    sport: r.sport,
-    imageUrl: r.image_url,
-    publishedAt: r.published_at,
-    source: r.source,
-    affiliateLink: r.affiliate_url ? { text: r.affiliate_text, url: r.affiliate_url } : undefined
-  }));
-});
-
-// GET /api/community/channels
+  // GET /api/community/channels
 app.get('/api/community/channels', async () => {
   const rows = db('SELECT * FROM community_channels ORDER BY member_count DESC');
   return rows.map(r => ({
@@ -190,6 +172,45 @@ app.post('/api/user/subscribe', async (req) => {
 
 // Health check
 app.get('/api/health', async () => ({ status: 'ok', version: '1.0.0' }));
+
+// GET /api/standings/:league
+app.get('/api/standings/:league', async (req) => {
+  const STANDINGS_MAP = {
+    'epl': ['soccer', 'eng.1'], 'laliga': ['soccer', 'esp.1'], 'seriea': ['soccer', 'ita.1'],
+    'bundesliga': ['soccer', 'ger.1'], 'ligue1': ['soccer', 'fra.1'], 'mls': ['soccer', 'usa.1'],
+    'nba': ['basketball', 'nba'], 'nfl': ['football', 'nfl'], 'mlb': ['baseball', 'mlb'],
+    'nhl': ['hockey', 'nhl'],
+  };
+  const mapping = STANDINGS_MAP[req.params.league];
+  if (!mapping) return { error: 'League not found' };
+  const data = await fetchStandings(mapping[0], mapping[1]);
+  return { league: req.params.league, standings: data || [] };
+});
+
+// GET /api/standings
+app.get('/api/standings', async () => {
+  const data = await fetchAllStandings();
+  return data;
+});
+
+// GET /api/news
+app.get('/api/news', async (req) => {
+  const { sport } = req.query;
+  const articles = await fetchNews(sport || 'all');
+  return articles;
+});
+
+// GET /api/videos
+app.get('/api/videos', async (req) => {
+  const { sport } = req.query;
+  const videos = await fetchVideos(sport || 'all');
+  return videos;
+});
+
+// GET /api/sports - list available extra sports
+app.get('/api/sports', async () => {
+  return EXTRA_SPORTS;
+});
 
 // Serve static frontend in production
 import { readFileSync } from 'fs';

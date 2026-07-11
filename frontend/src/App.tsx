@@ -16,6 +16,8 @@ import { ChatMessage } from './components/ChatMessage';
 import { PollWidget } from './components/PollWidget';
 import { AdBanner } from './components/AdBanner';
 import { GameCenter } from './components/GameCenter';
+import { LeagueStandings } from './components/LeagueStandings';
+import { VideoHighlights } from './components/VideoHighlights';
 
 // Mock data & types
 import type { Match, NewsArticle, Poll, CommunityChannel } from './mockData';
@@ -61,6 +63,11 @@ function App() {
   const [activeChannelId, setActiveChannelId] = useState<string>('chan-nba');
   const [chatInput, setChatInput] = useState<string>('');
   const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  // Standings & Videos State
+  const [standings, setStandings] = useState<any>({});
+  const [videos, setVideos] = useState<any[]>([]);
+  const [activeStandingLeague, setActiveStandingLeague] = useState<string>('epl');
 
   // API Integration Functions
   const fetchScores = async (sportFilter: string) => {
@@ -173,6 +180,31 @@ function App() {
     }
   };
 
+  const fetchStandingsData = async () => {
+    try {
+      const res = await fetch('/api/standings');
+      if (res.ok) {
+        const data = await res.json();
+        setStandings(data);
+      }
+    } catch (err) {
+      console.error('Error fetching standings:', err);
+    }
+  };
+
+  const fetchVideosData = async (sport: string) => {
+    try {
+      const url = sport === 'all' ? '/api/videos' : `/api/videos?sport=${sport}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setVideos(data);
+      }
+    } catch (err) {
+      console.error('Error fetching videos:', err);
+    }
+  };
+
   const handleSelectMatch = async (match: Match) => {
     setSelectedMatch(match);
     
@@ -227,6 +259,8 @@ function App() {
     fetchChannels();
     fetchScores('all');
     fetchNews('all');
+    fetchStandingsData();
+    fetchVideosData('all');
   }, []);
 
   // Fetch scores and news on selectedSport change
@@ -685,9 +719,30 @@ function App() {
                   <p className="text-xs mt-1">Try another sport category or search filter</p>
                 </div>
               )}
+
+              {/* League Standings */}
+              {selectedSport === 'all' && Object.keys(standings).length > 0 && (
+                <div className="mt-4">
+                  <div className="flex gap-1.5 mb-3 overflow-x-auto no-scrollbar">
+                    {['epl', 'laliga', 'seriea', 'bundesliga', 'ligue1', 'nba', 'nfl', 'mlb', 'nhl'].map(league => (
+                      <button key={league} onClick={() => setActiveStandingLeague(league)}
+                        className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap transition-all shrink-0 ${
+                          activeStandingLeague === league ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-white/5 text-neutral-400 border border-white/10 hover:bg-white/10'
+                        }`}>{league.toUpperCase()}</button>
+                    ))}
+                  </div>
+                  {standings[activeStandingLeague] && <LeagueStandings league={activeStandingLeague} standings={standings[activeStandingLeague]} />}
+                </div>
+              )}
+
+              {/* Video Highlights */}
+              {videos.length > 0 && (
+                <div className="mt-6">
+                  <VideoHighlights videos={videos} />
+                </div>
+              )}
             </div>
           )}
-
 
           {/* ==================== NEWS TAB ==================== */}
           {activeTab === 'news' && (

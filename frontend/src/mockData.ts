@@ -79,7 +79,12 @@ export const initialSports = [
   { id: 'football', name: 'Football' },
   { id: 'baseball', name: 'Baseball' },
   { id: 'hockey', name: 'Hockey' },
-  { id: 'mma', name: 'MMA' },
+  { id: 'tennis', name: 'Tennis' },
+  { id: 'golf', name: 'Golf' },
+  { id: 'f1', name: 'F1' },
+  { id: 'ufc', name: 'UFC' },
+  { id: 'cricket', name: 'Cricket' },
+  { id: 'boxing', name: 'Boxing' },
   { id: 'college-fb', name: 'College FB' },
   { id: 'college-bb', name: 'College BB' },
 ];
