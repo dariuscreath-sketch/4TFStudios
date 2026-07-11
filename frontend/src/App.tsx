@@ -453,75 +453,64 @@ function App() {
   const highlightedNews = news[0];
 
   return (
-    <div className="min-h-screen text-gray-100 flex justify-center selection:bg-emerald-500 selection:text-black bg-[#0a0a0f]">
-      {/* Mobile-first frame simulating an app on desktop */}
-      <div className="w-full max-w-md min-h-screen flex flex-col relative pb-20 overflow-hidden">
-        
-        {/* Top Header - Glass */}
-        <header className="sticky top-0 z-40 glass-strong border-b border-white/5 px-4 py-3.5 flex justify-between items-center shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-black gradient-text tracking-tight">
-              ScoreVerse
-            </span>
-            {isPremium && <PremiumBadge size="sm" />}
+    <div className="min-h-screen text-gray-100 selection:bg-emerald-500 selection:text-black bg-[#0a0a0f]">
+      
+      {/* Top Header - ESPN Style */}
+      <header className="sticky top-0 z-50 glass-strong border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="text-lg font-black gradient-text tracking-tight cursor-pointer" onClick={() => setActiveTab('home')}>ScoreVerse</span>
+            <div className="hidden md:flex items-center gap-1">
+              {['Scores', 'News', 'Community', 'Profile'].map(item => (
+                <button key={item} onClick={() => setActiveTab(item.toLowerCase() as any)} 
+                  className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                    activeTab === item.toLowerCase() ? 'bg-emerald-500/10 text-emerald-400' : 'text-neutral-400 hover:text-neutral-200 hover:bg-white/5'
+                  }`}>{item}</button>
+              ))}
+            </div>
           </div>
-
           <div className="flex items-center gap-2">
             {!isPremium ? (
-              <button 
-                onClick={() => setActiveTab('profile')} 
-                className="flex items-center gap-1 text-[11px] font-bold text-amber-400 hover:text-amber-300 border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 rounded-full uppercase transition-all duration-200 glow-gold"
-              >
-                <Crown className="w-3.5 h-3.5 fill-amber-500" />
-                Go Gold
-              </button>
+              <button onClick={() => setActiveTab('profile')} className="text-[11px] font-bold text-amber-400 hover:text-amber-300 border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 rounded-full uppercase glow-gold">Go Gold</button>
             ) : (
-              <button 
-                onClick={() => setActiveTab('profile')}
-                className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400"
-              >
-                <Crown className="w-4 h-4 fill-amber-500" />
-              </button>
+              <span className="text-xs font-bold text-amber-400">👑 Gold</span>
             )}
-
-            <button className="relative w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-neutral-400 hover:text-neutral-200 transition-colors">
+            <button className="relative w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-neutral-400 hover:text-neutral-200">
               <Bell className="w-4 h-4" />
-              {notificationsEnabled && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-[#0a0a0f] animate-ping" />
-              )}
+              {notificationsEnabled && <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-[#0a0a0f]" />}
             </button>
           </div>
-        </header>
+        </div>
+      </header>
 
-        {/* Score Ticker - ESPN style */}
-        <ScoreTicker matches={matches} onSelectMatch={handleSelectMatch} />
+      {/* Score Ticker */}
+      <ScoreTicker matches={matches} onSelectMatch={handleSelectMatch} />
 
-        {/* Top Nav - ESPN style */}
-        <TopNav activeSport={selectedSport} onSelectSport={(s) => setSelectedSport(s)} isPremium={isPremium} />
+      {/* Top Sports Nav */}
+      <TopNav activeSport={selectedSport} onSelectSport={(s) => setSelectedSport(s)} isPremium={isPremium} />
 
-        {/* Global Search Bar (Only shown on relevant tabs) */}
+      {/* Mobile Tab Bar */}
+      <div className="flex md:hidden gap-1 px-4 py-2 bg-white/[0.03] border-b border-white/5">
+        {['home', 'scores', 'news', 'community', 'profile'].map(tab => (
+          <button key={tab} onClick={() => setActiveTab(tab as any)}
+            className={`flex-1 text-[10px] font-bold py-2 rounded-lg transition-all uppercase tracking-wider ${
+              activeTab === tab ? 'bg-emerald-500/10 text-emerald-400' : 'text-neutral-500 hover:text-neutral-300'
+            }`}>{tab}</button>
+        ))}
+      </div>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 py-4">
+        {/* Search Bar */}
         {(activeTab === 'scores' || activeTab === 'news') && (
-          <div className="px-4 pt-3 shrink-0">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder={`Search ${activeTab}...`}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-neutral-900/60 border border-neutral-800 text-sm pl-9 pr-4 py-2 rounded-xl focus:outline-none focus:border-emerald-500 text-neutral-200 transition-colors"
-              />
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-neutral-500" />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-2.5 text-neutral-500 hover:text-neutral-300">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+          <div className="mb-4">
+            <input type="text" placeholder={`Search ${activeTab}...`} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 text-sm pl-9 pr-4 py-2 rounded-xl focus:outline-none focus:border-emerald-500 text-neutral-200 transition-colors" />
           </div>
         )}
 
         {/* Main Feed Container */}
-        <main className="flex-1 overflow-y-auto px-4 py-3 flex flex-col no-scrollbar">
+        <div className="flex-1 overflow-y-auto flex flex-col no-scrollbar">
           
           {/* ==================== HOME TAB ==================== */}
           {activeTab === 'home' && (
@@ -1048,17 +1037,13 @@ function App() {
             </div>
           )}
 
-        </main>
+        </div>
+          </main>
 
-        {/* Bottom Tab Bar Component */}
-        <TabBar 
-          activeTab={activeTab} 
-          setActiveTab={(tab) => {
-            setActiveTab(tab);
-            setSearchQuery(''); // Reset search when switching tabs
-          }} 
-          isPremium={isPremium} 
-        />
+        {/* Bottom Tab Bar - Mobile only */}
+        <div className="md:hidden">
+          <TabBar activeTab={activeTab} setActiveTab={(tab) => { setActiveTab(tab); setSearchQuery(''); }} isPremium={isPremium} />
+        </div>
 
 
         {/* ==================== MATCH DETAILS MODAL ==================== */}
@@ -1375,9 +1360,7 @@ function App() {
             </button>
           </div>
         )}
-
       </div>
-    </div>
   );
 }
 
