@@ -18,6 +18,8 @@ import { AdBanner } from './components/AdBanner';
 import { GameCenter } from './components/GameCenter';
 import { LeagueStandings } from './components/LeagueStandings';
 import { VideoHighlights } from './components/VideoHighlights';
+import { ScoreTicker } from './components/ScoreTicker';
+import { TopNav } from './components/TopNav';
 
 // Mock data & types
 import type { Match, NewsArticle, Poll, CommunityChannel } from './mockData';
@@ -490,6 +492,12 @@ function App() {
             </button>
           </div>
         </header>
+
+        {/* Score Ticker - ESPN style */}
+        <ScoreTicker matches={matches} onSelectMatch={handleSelectMatch} />
+
+        {/* Top Nav - ESPN style */}
+        <TopNav activeSport={selectedSport} onSelectSport={(s) => setSelectedSport(s)} isPremium={isPremium} />
 
         {/* Global Search Bar (Only shown on relevant tabs) */}
         {(activeTab === 'scores' || activeTab === 'news') && (
