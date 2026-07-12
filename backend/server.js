@@ -1,10 +1,26 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import jwt from '@fastify/jwt';
+import bcrypt from 'bcryptjs';
+import webPush from 'web-push';
 import { execSync } from 'child_process';
 import { fetchStandings, fetchNews, fetchVideos, fetchAllStandings, EXTRA_SPORTS } from './espn-service.js';
 
 const app = Fastify({ logger: true });
 await app.register(cors, { origin: true });
+await app.register(jwt, { secret: process.env.JWT_SECRET || 'scoreverse-dev-secret-key-2024' });
+
+// Configure web push
+const vapidKeys = {
+  publicKey: process.env.VAPID_PUBLIC_KEY || 'BP3JcPtR3qPvJc5dGq5c8qR5cJcPvJc5dGq5c8qR5cJcPvJc5dGq5c8qR5cJcPvJc5dGq5c',
+  privateKey: process.env.VAPID_PRIVATE_KEY || 'scoreverse-dev-private-key',
+};
+// Configure web push (skip if keys invalid)
+try {
+  webPush.setVapidDetails('mailto:support@scoreverse.live', vapidKeys.publicKey, vapidKeys.privateKey);
+} catch (e) {
+  console.log('Web push not configured:', e.message);
+}
 
 function db(query) {
   try {
@@ -210,6 +226,116 @@ app.get('/api/videos', async (req) => {
 // GET /api/sports - list available extra sports
 app.get('/api/sports', async () => {
   return EXTRA_SPORTS;
+});
+
+// ============ AUTH ============
+
+// POST /api/auth/signup
+app.post('/api/auth/signup', async (req) => {
+  const { username, email, password } = req.body;
+  if (!username || !email || !password) return { error: 'All fields required' };
+  const existing = db(`SELECT id FROM users WHERE username = '${username}' OR email = '${email}'`);
+  if (existing.length) return { error: 'User already exists' };
+  const hash = await bcrypt.hash(password, 10);
+  const id = `user-${Date.now()}`;
+  db(`INSERT INTO users (id, username, email, password_hash) VALUES ('${id}', '${username}', '${email}', '${hash}')`);
+  const token = await app.jwt.sign({ id, username });
+  return { token, user: { id, username, email, isPremium: false } };
+});
+
+// POST /api/auth/login
+app.post('/api/auth/login', async (req) => {
+  const { username, password } = req.body;
+  const users = db(`SELECT * FROM users WHERE username = '${username}'`);
+  if (!users.length) return { error: 'Invalid credentials' };
+  const user = users[0];
+  const valid = await bcrypt.compare(password, user.password_hash);
+  if (!valid) return { error: 'Invalid credentials' };
+  const token = await app.jwt.sign({ id: user.id, username: user.username });
+  return { token, user: { id: user.id, username: user.username, email: user.email, isPremium: !!user.is_premium } };
+});
+
+// GET /api/auth/me
+app.get('/api/auth/me', async (req) => {
+  try {
+    await req.jwtVerify();
+    const users = db(`SELECT * FROM users WHERE id = '${req.user.id}'`);
+    if (!users.length) return { error: 'User not found' };
+    const u = users[0];
+    return { id: u.id, username: u.username, email: u.email, isPremium: !!u.is_premium };
+  } catch { return { error: 'Not authenticated' }; }
+});
+
+// ============ TEAM PAGES ============
+
+// GET /api/teams/:id - full team page data
+app.get('/api/teams/:id', async (req) => {
+  const { id } = req.params;
+  // Get team info
+  const teams = db(`SELECT t.*, l.name as league_name, l.sport FROM teams t LEFT JOIN leagues l ON t.league_id = l.id WHERE t.id = '${id}'`);
+  if (!teams.length) {
+    // Try ESPN API for team lookup
+    return { error: 'Team not found', id };
+  }
+  const team = teams[0];
+  
+  // Get recent games
+  const games = db(`SELECT g.*, 
+    COALESCE(ht.name, g.home_team_id) as home_name, COALESCE(at.name, g.away_team_id) as away_name,
+    COALESCE(ht.logo, '') as home_logo, COALESCE(at.logo, '') as away_logo
+    FROM games g 
+    LEFT JOIN teams ht ON g.home_team_id = ht.id
+    LEFT JOIN teams at ON g.away_team_id = at.id
+    WHERE g.home_team_id = '${id}' OR g.away_team_id = '${id}'
+    ORDER BY g.start_time DESC LIMIT 10`);
+  
+  // Get standings position
+  const standingsData = await fetchStandings(team.sport, team.league_id);
+  const position = standingsData?.findIndex(e => e.name?.toLowerCase().includes(team.name?.toLowerCase() || '')) ?? -1;
+
+  return {
+    id: team.id,
+    name: team.name,
+    logo: team.logo,
+    league: team.league_name,
+    sport: team.sport,
+    standingsPosition: position >= 0 ? position + 1 : null,
+    recentGames: games.map(g => ({
+      id: g.id, status: g.status, homeTeam: g.home_name, awayTeam: g.away_name,
+      homeScore: g.home_score, awayScore: g.away_score, time: g.period || g.start_time,
+      venue: g.venue, sport: g.sport,
+    })),
+  };
+});
+
+// GET /api/teams/:id/schedule
+app.get('/api/teams/:id/schedule', async (req) => {
+  const { id } = req.params;
+  const games = db(`SELECT g.*,
+    COALESCE(ht.name, g.home_team_id) as home_name, COALESCE(at.name, g.away_team_id) as away_name
+    FROM games g
+    LEFT JOIN teams ht ON g.home_team_id = ht.id
+    LEFT JOIN teams at ON g.away_team_id = at.id
+    WHERE (g.home_team_id = '${id}' OR g.away_team_id = '${id}') AND g.status = 'scheduled'
+    ORDER BY g.start_time ASC LIMIT 10`);
+  return games;
+});
+
+// ============ PUSH NOTIFICATIONS ============
+
+// POST /api/notifications/subscribe
+app.post('/api/notifications/subscribe', async (req) => {
+  const { subscription, userId } = req.body;
+  if (!subscription) return { error: 'Subscription required' };
+  db(`INSERT OR REPLACE INTO user_settings (user_id, key, value) VALUES ('${userId || 'anonymous'}', 'push_subscription', '${JSON.stringify(subscription).replace(/'/g, "''")}')`);
+  return { success: true };
+});
+
+// DELETE /api/notifications/unsubscribe
+app.delete('/api/notifications/unsubscribe', async (req) => {
+  const { userId } = req.body;
+  db(`DELETE FROM user_settings WHERE user_id = '${userId || 'anonymous'}' AND key = 'push_subscription'`);
+  return { success: true };
 });
 
 // Serve static frontend in production
