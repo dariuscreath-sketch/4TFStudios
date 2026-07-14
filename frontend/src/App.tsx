@@ -26,6 +26,7 @@ import { ResponsibleGaming } from './components/ResponsibleGaming';
 import { SearchBar } from './components/SearchBar';
 import { TodaySchedule } from './components/TodaySchedule';
 import { Fantasy } from './components/Fantasy';
+import { FreeAgency } from './components/FreeAgency';
 
 // Mock data & types
 import type { Match, NewsArticle, Poll, CommunityChannel } from './mockData';
@@ -840,6 +841,11 @@ function App() {
                   <p className="text-xs mt-1">Try another search or sport channel</p>
                 </div>
               )}
+
+              {/* Free Agency & Transfers */}
+              <div className="mt-4">
+                <FreeAgency />
+              </div>
             </div>
           )}
 

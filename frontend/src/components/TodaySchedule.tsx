@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Calendar, Clock, MapPin, Tv, Play, ChevronRight } from 'lucide-react';
+import React, { useMemo, useEffect, useState } from 'react';
+import { Calendar, Clock, MapPin, Tv, Play, ChevronRight, Ticket, Volume2, ExternalLink } from 'lucide-react';
 import type { Match, Team } from '../mockData';
 
 // Broadcast network mapping
@@ -56,8 +56,42 @@ export const TodaySchedule: React.FC<TodayScheduleProps> = ({ matches, onSelectM
 
   if (todayGames.length === 0) return null;
 
+  // Build the "Now Playing" announcement string
+  const announcement = todayGames.map(m => {
+    const home = typeof m.homeTeam === 'string' ? m.homeTeam : (m.homeTeam as Team).name;
+    const away = typeof m.awayTeam === 'string' ? m.awayTeam : (m.awayTeam as Team).name;
+    return `${home} vs ${away}`;
+  }).join(' · ');
+
+  const getTicketLink = (match: Match): string => {
+    const home = typeof match.homeTeam === 'string' ? match.homeTeam : (match.homeTeam as Team).name;
+    const away = typeof match.awayTeam === 'string' ? match.awayTeam : (match.awayTeam as Team).name;
+    const team = home.split(' ').pop() || home;
+    return `https://www.ticketmaster.com/search?q=${encodeURIComponent(team + ' tickets')}`;
+  };
+
   return (
     <div className="mb-5">
+      {/* Broadcast Ticker - "Now Playing" announcement */}
+      <div className="mb-3 overflow-hidden rounded-xl bg-gradient-to-r from-emerald-950/60 via-slate-950 to-blue-950/60 border border-emerald-500/10 p-3">
+        <div className="flex items-center gap-2 mb-1.5">
+          <Volume2 className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+          <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">Now Playing</span>
+          <span className="text-[8px] text-neutral-500">· Today's Matchups</span>
+        </div>
+        <div className="overflow-hidden">
+          <div className="animate-marquee whitespace-nowrap">
+            <span className="text-xs font-bold text-white">
+              {announcement}
+              <span className="mx-8 text-emerald-400">●</span>
+              {announcement}
+              <span className="mx-8 text-emerald-400">●</span>
+              {announcement}
+            </span>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center gap-2 mb-3">
         <Calendar className="w-4 h-4 text-emerald-400" />
         <h3 className="text-xs font-bold text-white uppercase tracking-wider">Today's Games</h3>
@@ -139,6 +173,19 @@ export const TodaySchedule: React.FC<TodayScheduleProps> = ({ matches, onSelectM
                   {broadcast}
                 </span>
               </div>
+
+              {/* Ticket Link */}
+              <a
+                href={getTicketLink(match)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="mt-2 flex items-center gap-1.5 text-[8px] font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-500/5 hover:bg-emerald-500/10 px-2 py-1 rounded-full transition-all w-fit"
+              >
+                <Ticket className="w-3 h-3" />
+                Get Tickets
+                <ExternalLink className="w-2.5 h-2.5" />
+              </a>
 
               {/* Click hint */}
               <ChevronRight className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-600 group-hover:text-neutral-400 transition-colors" />
