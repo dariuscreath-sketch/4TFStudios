@@ -23,6 +23,7 @@ import { TopNav } from './components/TopNav';
 import { AuthModal } from './components/AuthModal';
 import { TeamPage } from './components/TeamPage';
 import { ResponsibleGaming } from './components/ResponsibleGaming';
+import { SearchBar } from './components/SearchBar';
 
 // Mock data & types
 import type { Match, NewsArticle, Poll, CommunityChannel } from './mockData';
@@ -552,13 +553,22 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-4">
-        {/* Search Bar */}
-        {(activeTab === 'scores' || activeTab === 'news') && (
-          <div className="mb-4">
-            <input type="text" placeholder={`Search ${activeTab}...`} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 text-sm pl-9 pr-4 py-2 rounded-xl focus:outline-none focus:border-emerald-500 text-neutral-200 transition-colors" />
-          </div>
-        )}
+        {/* Global Search Bar - searches everything */}
+        <div className="mb-4">
+          <SearchBar
+            games={matches}
+            news={news}
+            channels={channels}
+            onGameSelect={handleSelectMatch}
+            onNewsSelect={(article) => setSelectedArticle(article)}
+            onChannelSelect={(channel) => { setActiveChannelId(channel.id); setActiveTab('community'); }}
+            onTeamSelect={(teamName) => {
+              // Find channel or game for this team
+              const game = matches.find(g => g.homeTeam === teamName || g.awayTeam === teamName);
+              if (game) handleSelectMatch(game);
+            }}
+          />
+        </div>
 
         {/* Main Feed Container */}
         <div className="flex-1 overflow-y-auto flex flex-col no-scrollbar">
