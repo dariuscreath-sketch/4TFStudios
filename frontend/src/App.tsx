@@ -25,6 +25,7 @@ import { TeamPage } from './components/TeamPage';
 import { ResponsibleGaming } from './components/ResponsibleGaming';
 import { SearchBar } from './components/SearchBar';
 import { TodaySchedule } from './components/TodaySchedule';
+import { Fantasy } from './components/Fantasy';
 
 // Mock data & types
 import type { Match, NewsArticle, Poll, CommunityChannel } from './mockData';
@@ -36,7 +37,7 @@ import {
 
 function App() {
   // Navigation & Core States
-  const [activeTab, setActiveTab] = useState<'home' | 'scores' | 'news' | 'community' | 'profile'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'scores' | 'news' | 'community' | 'profile' | 'fantasy'>('home');
   const [isPremium, setIsPremium] = useState<boolean>(false);
   
   // Custom mock interactive states
@@ -509,7 +510,7 @@ function App() {
           <div className="flex items-center gap-4">
             <span className="text-lg font-black gradient-text tracking-tight cursor-pointer" onClick={() => setActiveTab('home')}>ScoreVerse</span>
             <div className="hidden md:flex items-center gap-1">
-              {['Scores', 'News', 'Community', 'Profile'].map(item => (
+              {['Scores', 'News', 'Fantasy', 'Community', 'Profile'].map(item => (
                 <button key={item} onClick={() => setActiveTab(item.toLowerCase() as any)} 
                   className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
                     activeTab === item.toLowerCase() ? 'bg-emerald-500/10 text-emerald-400' : 'text-neutral-400 hover:text-neutral-200 hover:bg-white/5'
@@ -544,7 +545,7 @@ function App() {
 
       {/* Mobile Tab Bar */}
       <div className="flex md:hidden gap-1 px-4 py-2 bg-white/[0.03] border-b border-white/5">
-        {['home', 'scores', 'news', 'community', 'profile'].map(tab => (
+        {['home', 'scores', 'news', 'fantasy', 'community', 'profile'].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab as any)}
             className={`flex-1 text-[10px] font-bold py-2 rounded-lg transition-all uppercase tracking-wider ${
               activeTab === tab ? 'bg-emerald-500/10 text-emerald-400' : 'text-neutral-500 hover:text-neutral-300'
@@ -962,6 +963,13 @@ function App() {
             </div>
           )}
 
+
+          {/* ==================== FANTASY TAB ==================== */}
+          {activeTab === 'fantasy' && (
+            <div className="animate-fade-in pb-4">
+              <Fantasy isPremium={isPremium} />
+            </div>
+          )}
 
           {/* ==================== PROFILE TAB ==================== */}
           {activeTab === 'profile' && (
