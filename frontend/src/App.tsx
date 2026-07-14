@@ -112,7 +112,13 @@ function App() {
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
-        setMatches(data);
+        // Filter out games with null team names, fall back to team IDs
+        const cleaned = data.map((g: any) => ({
+          ...g,
+          homeTeam: { ...g.homeTeam, name: g.homeTeam.name || g.homeTeam.id || 'TBD' },
+          awayTeam: { ...g.awayTeam, name: g.awayTeam.name || g.awayTeam.id || 'TBD' },
+        }));
+        setMatches(cleaned);
       }
     } catch (err) {
       console.error('Error fetching scores:', err);

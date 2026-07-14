@@ -59,8 +59,8 @@ app.get('/api/scores', async (req) => {
     league: r.league_name || r.league_id,
     status: r.status,
     time: r.period || r.start_time || '',
-    homeTeam: { id: r.home_team_id, name: r.home_team_name, logo: r.home_team_logo, score: r.home_score },
-    awayTeam: { id: r.away_team_id, name: r.away_team_name, logo: r.away_team_logo, score: r.away_score },
+    homeTeam: { id: r.home_team_id, name: r.home_team_name || r.home_team_id, logo: r.home_team_logo, score: r.home_score },
+    awayTeam: { id: r.away_team_id, name: r.away_team_name || r.away_team_id, logo: r.away_team_logo, score: r.away_score },
     venue: r.venue,
     hasAiSummary: !!r.has_summary,
     hasPrediction: !!r.has_pred
@@ -86,8 +86,8 @@ app.get('/api/scores/:id', async (req) => {
     league: r.league_name || r.league_id,
     status: r.status,
     time: r.period || r.start_time || '',
-    homeTeam: { id: r.home_team_id, name: r.home_team_name, logo: r.home_team_logo, score: r.home_score },
-    awayTeam: { id: r.away_team_id, name: r.away_team_name, logo: r.away_team_logo, score: r.away_score },
+    homeTeam: { id: r.home_team_id, name: r.home_team_name || r.home_team_id, logo: r.home_team_logo, score: r.home_score },
+    awayTeam: { id: r.away_team_id, name: r.away_team_name || r.away_team_id, logo: r.away_team_logo, score: r.away_score },
     venue: r.venue,
     hasAiSummary: false,
     hasPrediction: false
