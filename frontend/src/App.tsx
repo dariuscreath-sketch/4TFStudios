@@ -27,6 +27,7 @@ import { SearchBar } from './components/SearchBar';
 import { TodaySchedule } from './components/TodaySchedule';
 import { Fantasy } from './components/Fantasy';
 import { FreeAgency } from './components/FreeAgency';
+import { LiveStreamingHub } from './components/LiveStreamingHub';
 
 // Mock data & types
 import type { Match, NewsArticle, Poll, CommunityChannel } from './mockData';
@@ -393,6 +394,11 @@ function App() {
     setShowSuccessOverlay(true);
     // Automatically join the VIP lounge
     setActiveChannelId('chan-premium');
+  };
+
+  // Stripe Gold subscription
+  const handleSubscribe = () => {
+    window.open('https://buy.stripe.com/4gM4gz01jdzPcsXf1D8AE00', '_blank');
   };
 
   // Downgrade for testing purposes
@@ -1335,6 +1341,15 @@ function App() {
                   </div>
                 )}
               </div>
+
+              {/* Live Streaming Hub (Gold Feature) */}
+              {selectedMatch.status === 'live' && (
+                <LiveStreamingHub 
+                  match={selectedMatch} 
+                  isPremium={isPremium} 
+                  isLive={selectedMatch.status === 'live'} 
+                />
+              )}
 
               {/* Ad in match modal */}
               {!isPremium && <AdBanner size="small" />}
