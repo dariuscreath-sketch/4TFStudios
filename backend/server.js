@@ -448,6 +448,6 @@ try {
   console.log('Frontend dist not found, API-only mode:', e.message);
 }
 
-const port = parseInt(process.env.PORT || '3002');
+const port = parseInt(process.env.PORT || '3000');
 await app.listen({ port, host: '0.0.0.0' });
 console.log(`ScoreVerse running on port ${port}`);

@@ -216,6 +216,9 @@ function App() {
   };
 
   const handleSubscribe = async () => {
+    // Open Stripe checkout
+    window.open('https://buy.stripe.com/4gM4gz01jdzPcsXf1D8AE00', '_blank');
+    // Also notify backend
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) {
@@ -394,11 +397,6 @@ function App() {
     setShowSuccessOverlay(true);
     // Automatically join the VIP lounge
     setActiveChannelId('chan-premium');
-  };
-
-  // Stripe Gold subscription
-  const handleSubscribe = () => {
-    window.open('https://buy.stripe.com/4gM4gz01jdzPcsXf1D8AE00', '_blank');
   };
 
   // Downgrade for testing purposes
@@ -615,7 +613,7 @@ function App() {
             onChannelSelect={(channel) => { setActiveChannelId(channel.id); setActiveTab('community'); }}
             onTeamSelect={(teamName) => {
               // Find channel or game for this team
-              const game = matches.find(g => g.homeTeam === teamName || g.awayTeam === teamName);
+              const game = matches.find(g => g.homeTeam.name === teamName || g.awayTeam.name === teamName);
               if (game) handleSelectMatch(game);
             }}
           />

@@ -43,13 +43,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const allTeams = React.useMemo(() => {
     const teamSet = new Set<string>();
     games.forEach(g => {
-      if (typeof g.homeTeam === 'string') {
-        teamSet.add(g.homeTeam);
-        teamSet.add(g.awayTeam as string);
-      } else {
-        teamSet.add((g.homeTeam as Team).name);
-        teamSet.add((g.awayTeam as Team).name);
-      }
+      if (g.homeTeam?.name) teamSet.add(g.homeTeam.name);
+      if (g.awayTeam?.name) teamSet.add(g.awayTeam.name);
     });
     return Array.from(teamSet).sort();
   }, [games]);
@@ -108,7 +103,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     news.forEach(article => {
       if (
         article.title.toLowerCase().includes(q) ||
-        article.content?.toLowerCase().includes(q) ||
+        article.summary?.toLowerCase().includes(q) ||
         article.sport?.toLowerCase().includes(q)
       ) {
         newResults.push({

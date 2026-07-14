@@ -4,7 +4,7 @@ export interface FantasyPlayer {
   name: string;
   team: string;
   sport: 'nfl' | 'college-fb' | 'college-bb';
-  sport: 'nfl', position: 'QB' | 'RB' | 'WR' | 'TE' | 'K' | 'DEF' | 'PG' | 'SG' | 'SF' | 'PF' | 'C';
+  position: 'QB' | 'RB' | 'WR' | 'TE' | 'K' | 'DEF' | 'PG' | 'SG' | 'SF' | 'PF' | 'C';
   jerseyNumber?: number;
   byeWeek: number;
   projectedPoints: number;

@@ -2,8 +2,8 @@ import React from 'react';
 import { Home, Trophy, Newspaper, Users, User } from 'lucide-react';
 
 interface TabBarProps {
-  activeTab: 'home' | 'scores' | 'news' | 'community' | 'profile';
-  setActiveTab: (tab: 'home' | 'scores' | 'news' | 'community' | 'profile') => void;
+  activeTab: 'home' | 'scores' | 'news' | 'community' | 'profile' | 'fantasy';
+  setActiveTab: (tab: 'home' | 'scores' | 'news' | 'community' | 'profile' | 'fantasy') => void;
   isPremium: boolean;
 }
 
