@@ -160,13 +160,55 @@ app.get('/api/community/channels/:id/messages', async (req) => {
 app.post('/api/community/channels/:id/messages', async (req) => {
   const { text } = req.body;
   if (!text) return { error: 'text is required' };
-  db(`INSERT INTO community_messages (id, channel_id, user_name, text) VALUES ('msg-${Date.now()}', '${req.params.id}', 'DemoFan', '${text.replace(/'/g, "''")}')`);
+
+  let senderName = 'DemoFan';
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (token) {
+      const decoded = app.jwt.verify(token);
+      if (decoded && decoded.username) {
+        senderName = decoded.username;
+      }
+    }
+  } catch (err) {
+    // Ignore JWT errors
+  }
+
+  db(`INSERT INTO community_messages (id, channel_id, user_name, text) VALUES ('msg-${Date.now()}', '${req.params.id}', '${senderName.replace(/'/g, "''")}', '${text.replace(/'/g, "''")}')`);
   return { success: true };
 });
 
 // GET /api/user/profile
-app.get('/api/user/profile', async () => {
+app.get('/api/user/profile', async (req) => {
+  let user = null;
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (token) {
+      user = app.jwt.verify(token);
+    }
+  } catch (err) {
+    // Ignore token errors
+  }
+
+  if (user) {
+    const users = db(`SELECT * FROM users WHERE id = '${user.id}'`);
+    if (users && users.length > 0) {
+      const u = users[0];
+      const subs = db(`SELECT * FROM subscriptions WHERE user_id = '${u.id}' AND active = 1`);
+      const follows = db(`SELECT * FROM user_follows WHERE user_id = '${u.id}'`);
+      return {
+        id: u.id,
+        username: u.username,
+        email: u.email,
+        isPremium: u.is_premium === 1 || subs.length > 0,
+        favorites: { sports: ['soccer', 'basketball'], teams: follows.map(f => f.team_id) },
+        notificationsEnabled: true
+      };
+    }
+  }
+
   return {
+    id: 'demo-user',
     username: 'DemoFan',
     isPremium: false,
     favorites: { sports: ['soccer', 'basketball'], teams: [] },
@@ -176,13 +218,46 @@ app.get('/api/user/profile', async () => {
 
 // POST /api/user/preferences
 app.post('/api/user/preferences', async (req) => {
-  return { success: true, favorites: req.body.favorites };
+  let user = null;
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (token) {
+      user = app.jwt.verify(token);
+    }
+  } catch (err) {
+    // Ignore token errors
+  }
+
+  const { favorites } = req.body;
+  if (user && favorites?.teams) {
+    // Keep user's followed teams synchronized
+    db(`DELETE FROM user_follows WHERE user_id = '${user.id}'`);
+    for (const teamId of favorites.teams) {
+      db(`INSERT OR IGNORE INTO user_follows (user_id, team_id) VALUES ('${user.id}', '${teamId}')`);
+    }
+  }
+
+  return { success: true, favorites };
 });
 
 // POST /api/user/subscribe
 app.post('/api/user/subscribe', async (req) => {
   const { plan } = req.body;
-  db(`INSERT OR IGNORE INTO subscriptions (user_id, plan) VALUES ('demo-user', '${plan}')`);
+  let userId = 'demo-user';
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (token) {
+      const decoded = app.jwt.verify(token);
+      if (decoded && decoded.id) {
+        userId = decoded.id;
+        db(`UPDATE users SET is_premium = 1 WHERE id = '${userId}'`);
+      }
+    }
+  } catch (err) {
+    // Ignore token errors
+  }
+
+  db(`INSERT OR IGNORE INTO subscriptions (user_id, plan) VALUES ('${userId}', '${plan}')`);
   return { success: true, isPremium: true, message: 'Welcome to ScoreVerse Premium!' };
 });
 

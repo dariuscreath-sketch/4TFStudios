@@ -20,6 +20,8 @@ import { LeagueStandings } from './components/LeagueStandings';
 import { VideoHighlights } from './components/VideoHighlights';
 import { ScoreTicker } from './components/ScoreTicker';
 import { TopNav } from './components/TopNav';
+import { AuthModal } from './components/AuthModal';
+import { TeamPage } from './components/TeamPage';
 
 // Mock data & types
 import type { Match, NewsArticle, Poll, CommunityChannel } from './mockData';
@@ -65,6 +67,33 @@ function App() {
   const [activeChannelId, setActiveChannelId] = useState<string>('chan-nba');
   const [chatInput, setChatInput] = useState<string>('');
   const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  // Auth State
+  const [user, setUser] = useState<any>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Team Page State
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+
+  // Restore auth on mount
+  useEffect(() => {
+    if (token) {
+      fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(r => r.json()).then(d => { if (d.id) setUser(d); }).catch(() => {});
+    }
+  }, []);
+
+  const handleLogin = (userData: any, newToken: string) => {
+    setUser(userData);
+    setToken(newToken);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    setToken(null);
+  };
 
   // Standings & Videos State
   const [standings, setStandings] = useState<any>({});
@@ -137,9 +166,13 @@ function App() {
 
   const sendMessageToApi = async (channelId: string, text: string) => {
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       const res = await fetch(`/api/community/channels/${channelId}/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ text })
       });
       if (res.ok) {
@@ -152,7 +185,11 @@ function App() {
 
   const fetchUserProfile = async () => {
     try {
-      const res = await fetch('/api/user/profile');
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const res = await fetch('/api/user/profile', { headers });
       if (res.ok) {
         const data = await res.json();
         setIsPremium(data.isPremium);
@@ -168,9 +205,13 @@ function App() {
 
   const handleSubscribe = async () => {
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       const res = await fetch('/api/user/subscribe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ plan: 'premium_monthly' })
       });
       if (res.ok) {
@@ -257,13 +298,17 @@ function App() {
 
   // Fetch initial data on mount
   useEffect(() => {
-    fetchUserProfile();
     fetchChannels();
     fetchScores('all');
     fetchNews('all');
     fetchStandingsData();
     fetchVideosData('all');
   }, []);
+
+  // Fetch user profile when token changes
+  useEffect(() => {
+    fetchUserProfile();
+  }, [token]);
 
   // Fetch scores and news on selectedSport change
   useEffect(() => {
@@ -346,7 +391,7 @@ function App() {
       id: `temp-${Date.now()}`,
       channelId: activeChannelId,
       user: {
-        name: 'DemoFan',
+        name: user ? user.username : 'DemoFan',
         isPremium: isPremium,
         avatar: isPremium ? '👑' : '😎',
       },
@@ -470,6 +515,11 @@ function App() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {user ? (
+              <span className="text-xs text-neutral-300 font-medium">{user.username}</span>
+            ) : (
+              <button onClick={() => setShowAuthModal(true)} className="text-xs font-bold text-emerald-400 hover:text-emerald-300 px-2 py-1 rounded-lg transition-colors">Sign In</button>
+            )}
             {!isPremium ? (
               <button onClick={() => setActiveTab('profile')} className="text-[11px] font-bold text-amber-400 hover:text-amber-300 border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 rounded-full uppercase glow-gold">Go Gold</button>
             ) : (
@@ -842,7 +892,7 @@ function App() {
                           <ChatMessage 
                             key={message.id} 
                             message={message} 
-                            isCurrentUser={message.user.name === 'DemoFan'} 
+                            isCurrentUser={message.user.name === (user ? user.username : 'DemoFan')} 
                           />
                         ))
                       ) : (
@@ -902,18 +952,35 @@ function App() {
           {activeTab === 'profile' && (
             <div className="flex flex-col gap-4 animate-fade-in pb-4">
               {/* Profile Card */}
-              <div className="bg-slate-900/60 border border-neutral-800 rounded-2xl p-5 shadow-lg flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-full border flex items-center justify-center text-3xl shadow-md shrink-0 ${
-                  isPremium ? 'bg-amber-950 border-amber-500' : 'bg-neutral-800 border-neutral-700'
-                }`}>
-                  {isPremium ? '👑' : '😎'}
-                </div>
-                <div className="truncate">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-extrabold text-white text-base truncate">DemoFan_99</span>
-                    {isPremium && <PremiumBadge size="sm" />}
+              <div className="bg-slate-900/60 border border-neutral-800 rounded-2xl p-5 shadow-lg flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4 truncate">
+                  <div className={`w-14 h-14 rounded-full border flex items-center justify-center text-3xl shadow-md shrink-0 ${
+                    isPremium ? 'bg-amber-950 border-amber-500' : 'bg-neutral-800 border-neutral-700'
+                  }`}>
+                    {isPremium ? '👑' : '😎'}
                   </div>
-                  <span className="text-xs text-neutral-400 block mt-0.5 truncate">Joined June 2026</span>
+                  <div className="truncate">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-extrabold text-white text-base truncate">
+                        {user ? user.username : 'Guest Fan'}
+                      </span>
+                      {isPremium && <PremiumBadge size="sm" />}
+                    </div>
+                    <span className="text-xs text-neutral-400 block mt-0.5 truncate">
+                      {user ? user.email : 'Sign in to customize favorite teams & sync preferences'}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  {user ? (
+                    <button onClick={handleLogout} className="text-xs font-bold bg-white/5 border border-white/10 hover:bg-white/10 text-red-400 px-3.5 py-2 rounded-xl transition-colors shrink-0">
+                      Sign Out
+                    </button>
+                  ) : (
+                    <button onClick={() => setShowAuthModal(true)} className="text-xs font-bold bg-gradient-to-r from-emerald-500 to-emerald-400 text-black px-4 py-2 rounded-xl hover:from-emerald-400 hover:to-emerald-300 transition-all shadow-md shrink-0">
+                      Sign In
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1359,6 +1426,15 @@ function App() {
               Continue to Gold Feed
             </button>
           </div>
+        )}
+
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={() => setShowAuthModal(false)} 
+          onLogin={handleLogin} 
+        />
+        {selectedTeamId && (
+          <TeamPage teamId={selectedTeamId} onBack={() => setSelectedTeamId(null)} onSelectMatch={(game) => { setSelectedTeamId(null); handleSelectMatch(game); }} isPremium={isPremium} />
         )}
       </div>
   );
