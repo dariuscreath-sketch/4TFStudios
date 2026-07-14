@@ -24,7 +24,8 @@ try {
 
 function db(query) {
   try {
-    const out = execSync(`team-db "${query.replace(/"/g, '\\"')}"`, { encoding: 'utf8', timeout: 10000 });
+    const escaped = query.replace(/"/g, '\\"').replace(/\$/g, '\\$');
+    const out = execSync('team-db ' + JSON.stringify(escaped), { encoding: 'utf8', timeout: 10000 });
     return JSON.parse(out);
   } catch (e) {
     console.error('DB Error:', e.message);
