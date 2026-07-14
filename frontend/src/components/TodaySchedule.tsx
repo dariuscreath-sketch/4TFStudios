@@ -15,7 +15,8 @@ const BROADCAST_NETWORKS: Record<string, string[]> = {
   'Ligue 1': ['beIN Sports'],
   NHL: ['ESPN', 'TNT', 'NHL Network'],
   MLS: ['Apple TV+', 'FOX'],
-  MLB: ['ESPN', 'FOX', 'MLB Network'],
+  'NCAA Football': ['FOX', 'ABC', 'ESPN', 'CBS', 'Big Ten Network', 'SEC Network'],
+  'NCAA Basketball': ['ESPN', 'CBS', 'FOX', 'Big Ten Network', 'SEC Network', 'ACC Network'],
 };
 
 const getBroadcastForSport = (match: Match): string => {
@@ -27,6 +28,8 @@ const getBroadcastForSport = (match: Match): string => {
   const sportNetworks: Record<string, string[]> = {
     basketball: ['ESPN', 'NBA TV', 'TNT'],
     football: ['FOX', 'CBS', 'NBC', 'ESPN'],
+    'college-fb': ['FOX', 'ABC', 'ESPN', 'CBS', 'Big Ten Network', 'SEC Network'],
+    'college-bb': ['ESPN', 'CBS', 'FOX', 'Big Ten Network', 'SEC Network', 'ACC Network'],
     soccer: ['ESPN+', 'CBS Sports', 'Paramount+'],
     baseball: ['ESPN', 'FOX', 'MLB Network'],
     hockey: ['ESPN', 'TNT', 'NHL Network'],

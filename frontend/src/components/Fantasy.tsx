@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import {
   FANTASY_PLAYERS, POSITIONS, POSITION_LABELS, POSITION_COLORS,
-  createDefaultLeague
+  createDefaultLeague, SPORT_POSITIONS
 } from '../fantasyData';
 import type { FantasyPlayer, FantasyLeague, FantasyTeam } from '../fantasyData';
 
@@ -18,6 +18,7 @@ export const Fantasy: React.FC<FantasyProps> = ({ isPremium }) => {
   const [league, setLeague] = useState<FantasyLeague>(createDefaultLeague());
   const [userTeamId] = useState('team-0');
   const [activePanel, setActivePanel] = useState<'standings' | 'players' | 'draft'>('standings');
+  const [selectedSport, setSelectedSport] = useState<'nfl' | 'college-fb' | 'college-bb'>('nfl');
   const [searchQuery, setSearchQuery] = useState('');
   const [positionFilter, setPositionFilter] = useState<string>('all');
   const [showDraftModal, setShowDraftModal] = useState(false);
@@ -29,6 +30,7 @@ export const Fantasy: React.FC<FantasyProps> = ({ isPremium }) => {
   const freeAgents = useMemo(() => {
     const ownedIds = new Set(league.teams.flatMap(t => t.players.map(p => p.id)));
     return FANTASY_PLAYERS
+      .filter(p => p.sport === selectedSport)
       .filter(p => !ownedIds.has(p.id))
       .filter(p => positionFilter === 'all' || p.position === positionFilter)
       .filter(p => 
@@ -37,7 +39,7 @@ export const Fantasy: React.FC<FantasyProps> = ({ isPremium }) => {
         p.team.toLowerCase().includes(searchQuery.toLowerCase())
       )
       .sort((a, b) => b.projectedPoints - a.projectedPoints);
-  }, [league, searchQuery, positionFilter]);
+  }, [league, searchQuery, positionFilter, selectedSport]);
 
   // Owner lookup
   const ownerOfPlayer = (playerId: string): string => {
@@ -106,7 +108,9 @@ export const Fantasy: React.FC<FantasyProps> = ({ isPremium }) => {
             <Trophy className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-black text-white">Fantasy Football</h2>
+            <h2 className="text-lg font-black text-white">
+              {selectedSport === 'nfl' ? 'Fantasy Football' : selectedSport === 'college-fb' ? 'College Fantasy FB' : 'College Fantasy BB'}
+            </h2>
             <p className="text-[10px] text-neutral-500">
               {league.name} · Week {league.currentWeek} · {league.teams.length} teams
             </p>
@@ -122,6 +126,27 @@ export const Fantasy: React.FC<FantasyProps> = ({ isPremium }) => {
             </span>
           )}
         </div>
+      </div>
+
+      {/* Sport Selector */}
+      <div className="flex gap-1 mb-3 bg-white/[0.03] rounded-xl p-1">
+        {[
+          { id: 'nfl', label: '🏈 NFL', icon: Trophy },
+          { id: 'college-fb', label: '🏈 College FB', icon: Users },
+          { id: 'college-bb', label: '🏀 College BB', icon: Star },
+        ].map(sport => (
+          <button
+            key={sport.id}
+            onClick={() => setSelectedSport(sport.id as any)}
+            className={`flex-1 flex items-center justify-center gap-1.5 text-[10px] font-bold py-2 rounded-lg transition-all ${
+              selectedSport === sport.id
+                ? 'bg-emerald-500/10 text-emerald-400 shadow-sm'
+                : 'text-neutral-500 hover:text-neutral-300'
+            }`}
+          >
+            {sport.label}
+          </button>
+        ))}
       </div>
 
       {/* Tabs */}
