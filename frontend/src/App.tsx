@@ -350,6 +350,42 @@ function App() {
     }
   }, [messages, activeChannelId, activeTab]);
 
+  // Service Worker & Push Notification registration
+  useEffect(() => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+    const registerSW = async () => {
+      try {
+        const reg = await navigator.serviceWorker.register('/sw.js');
+        console.log('SW registered:', reg.scope);
+
+        if (notificationsEnabled) {
+          const sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array('BMNuZZtoqQ4W7hVlX2lbHa9w83RuHiKAIRVb54WWL9im8RV6Z32TRMllS8fxOk4KP2Exgc3iJ1uIhbRnb678MrY')
+          });
+          await fetch('/api/notifications/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subscription: sub }),
+          });
+        }
+      } catch (err) {
+        console.log('Push notification setup failed:', err);
+      }
+    };
+
+    registerSW();
+  }, [notificationsEnabled]);
+
+  // Helper: base64 to Uint8Array for VAPID key
+  function urlBase64ToUint8Array(base64String: string) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+  }
+
   // Upgrade success simulation
   const triggerPremiumUpgrade = () => {
     setIsPremium(true);

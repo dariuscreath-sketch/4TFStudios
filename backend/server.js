@@ -12,8 +12,8 @@ await app.register(jwt, { secret: process.env.JWT_SECRET || 'scoreverse-dev-secr
 
 // Configure web push
 const vapidKeys = {
-  publicKey: process.env.VAPID_PUBLIC_KEY || 'BP3JcPtR3qPvJc5dGq5c8qR5cJcPvJc5dGq5c8qR5cJcPvJc5dGq5c8qR5cJcPvJc5dGq5c',
-  privateKey: process.env.VAPID_PRIVATE_KEY || 'scoreverse-dev-private-key',
+  publicKey: process.env.VAPID_PUBLIC_KEY || 'BMNuZZtoqQ4W7hVlX2lbHa9w83RuHiKAIRVb54WWL9im8RV6Z32TRMllS8fxOk4KP2Exgc3iJ1uIhbRnb678MrY',
+  privateKey: process.env.VAPID_PRIVATE_KEY || 'VKJI4yFUSEKVMWEodKDrNxJIj6E03mp3hAIXVtGS4vw',
 };
 // Configure web push (skip if keys invalid)
 try {
