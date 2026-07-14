@@ -24,6 +24,7 @@ import { AuthModal } from './components/AuthModal';
 import { TeamPage } from './components/TeamPage';
 import { ResponsibleGaming } from './components/ResponsibleGaming';
 import { SearchBar } from './components/SearchBar';
+import { TodaySchedule } from './components/TodaySchedule';
 
 // Mock data & types
 import type { Match, NewsArticle, Poll, CommunityChannel } from './mockData';
@@ -569,6 +570,9 @@ function App() {
             }}
           />
         </div>
+
+        {/* Today's Games Schedule */}
+        <TodaySchedule matches={matches} onSelectMatch={handleSelectMatch} />
 
         {/* Main Feed Container */}
         <div className="flex-1 overflow-y-auto flex flex-col no-scrollbar">
