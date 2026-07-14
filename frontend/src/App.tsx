@@ -22,6 +22,7 @@ import { ScoreTicker } from './components/ScoreTicker';
 import { TopNav } from './components/TopNav';
 import { AuthModal } from './components/AuthModal';
 import { TeamPage } from './components/TeamPage';
+import { ResponsibleGaming } from './components/ResponsibleGaming';
 
 // Mock data & types
 import type { Match, NewsArticle, Poll, CommunityChannel } from './mockData';
@@ -1267,6 +1268,9 @@ function App() {
 
               {/* Ad in match modal */}
               {!isPremium && <AdBanner size="small" />}
+
+              {/* Responsible Gaming Banner */}
+              {selectedMatch.prediction && <ResponsibleGaming variant="banner" />}
 
               {/* Win Projection / Expert Betting predictions (Locked or unlocked) */}
               {selectedMatch.prediction && (

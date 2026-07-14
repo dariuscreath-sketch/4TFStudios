@@ -59,29 +59,56 @@ export async function fetchNews(sport) {
   const leagues = {
     'soccer': 'soccer', 'basketball': 'basketball/nba', 'football': 'football/nfl',
     'baseball': 'baseball/mlb', 'hockey': 'hockey/nhl', 'tennis': 'tennis',
-    'golf': 'golf', 'ufc': 'mma', 'boxing': 'boxing', 'all': ''
+    'golf': 'golf', 'ufc': 'mma', 'boxing': 'boxing',
   };
-  const path = leagues[sport] || '';
-  const url = `https://site.api.espn.com/apis/site/v2/sports${path ? '/' + path : ''}/news`;
+  
+  // If 'all', fetch from multiple sports
+  if (sport === 'all' || !sport) {
+    const sports = ['basketball/nba', 'football/nfl', 'soccer', 'baseball/mlb', 'hockey/nhl'];
+    const allArticles = [];
+    for (const s of sports) {
+      try {
+        const url = `https://site.api.espn.com/apis/site/v2/sports/${s}/news?limit=5`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          const articles = (data.articles || []).slice(0, 5);
+          allArticles.push(...articles.map(a => mapArticle(a, s)));
+        }
+      } catch (e) { /* skip */ }
+    }
+    // Sort by date and deduplicate
+    allArticles.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+    const seen = new Set();
+    return allArticles.filter(a => { const key = a.title; if (seen.has(key)) return false; seen.add(key); return true; }).slice(0, 15);
+  }
+  
+  const path = leagues[sport];
+  if (!path) return [];
+  const url = `https://site.api.espn.com/apis/site/v2/sports/${path}/news`;
   
   try {
     const res = await fetch(url);
     if (!res.ok) return [];
     const data = await res.json();
-    return (data.articles || []).slice(0, 10).map(a => ({
-      id: a.id || `news-${Date.now()}-${Math.random()}`,
-      title: a.headline || a.title || '',
-      summary: a.description || a.summary || '',
-      sport: sport || 'all',
-      imageUrl: a.images?.[0]?.url || a.image || '',
-      publishedAt: a.published || a.date || '',
-      source: 'ESPN',
-      url: a.links?.web?.href || a.links?.api?.href || '',
-    }));
+    return (data.articles || []).slice(0, 10).map(a => mapArticle(a, sport));
   } catch (e) {
     console.error(`News error:`, e.message);
     return [];
   }
+}
+
+function mapArticle(a, sport) {
+  return {
+    id: a.id || `news-${Date.now()}-${Math.random()}`,
+    title: a.headline || a.title || '',
+    summary: a.description || a.summary || '',
+    sport: sport || 'all',
+    imageUrl: a.images?.[0]?.url || a.image || '',
+    publishedAt: a.published || a.date || '',
+    source: 'ESPN',
+    url: a.links?.web?.href || a.links?.api?.href || '',
+  };
 }
 
 // Fetch video highlights from ESPN
